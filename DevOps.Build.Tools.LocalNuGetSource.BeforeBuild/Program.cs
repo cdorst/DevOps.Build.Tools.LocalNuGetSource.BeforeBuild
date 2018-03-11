@@ -18,8 +18,7 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
             var packages = new Dictionary<string, string>();
 
             Console.WriteLine("Finding .csproj...");
-            var dir = Environment.GetEnvironmentVariable("APPVEYOR_BUILD_FOLDER");
-            var files = Directory.EnumerateFiles(dir, " *.csproj", SearchOption.AllDirectories);
+            var files = Directory.EnumerateFiles(@"C:\projects\", " *.csproj", SearchOption.AllDirectories);
             foreach (var file in files)
             {
                 Console.WriteLine($"Found .csproj: {file}");

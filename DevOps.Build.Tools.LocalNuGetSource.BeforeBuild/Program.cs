@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Common.Functions.DownloadAndExtractZip.ZipDownloaderAndExtractor;
+using static Common.Functions.DownloadFile.FileDownloader;
+using static System.IO.Path;
 
 namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
 {
@@ -34,13 +35,14 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
             foreach (var package in packages)
             {
                 var name = package.GetFileName();
+                var path = Combine(cacheDirectory, name);
                 Console.WriteLine($"Looking for package: {name}...");
-                if (File.Exists(Path.Combine(cacheDirectory, name))) continue;
+                if (File.Exists(path)) continue;
 
                 try
                 {
                     Console.WriteLine($"Caching package: {name}...");
-                    DownloadAndExtract(new Uri($"{packageUri}/{name}.zip"), cacheDirectory);
+                    Download(new Uri($"{packageUri}/{name}"), path);
                 }
                 catch (Exception ex)
                 {

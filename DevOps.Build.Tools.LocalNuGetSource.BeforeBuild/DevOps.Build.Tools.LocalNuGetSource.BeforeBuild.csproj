@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDorst.Common.Functions.DownloadAndExtractZip" Version="2.0.1" />
+    <PackageReference Include="CDorst.Common.Functions.DownloadFile" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

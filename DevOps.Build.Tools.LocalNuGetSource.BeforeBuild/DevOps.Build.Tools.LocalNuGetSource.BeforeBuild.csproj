@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CDorst.Azure.Storage.Connection.GetConnectionString" Version="3.0.0" />
+    <PackageReference Include="CDorst.Azure.Storage.Table.GetTableReference" Version="3.0.0" />
     <PackageReference Include="CDorst.Common.Functions.DownloadFile" Version="2.0.0" />
     <PackageReference Include="CDorst.DevOps.Build.AppVeyor.GetBuildRecord" Version="1.0.0" />
   </ItemGroup>

@@ -34,10 +34,10 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
             }
 
             // Save each package in local NuGet cache
-            await PopulatePackageCache($"{token}.", cacheDirectory, packageUri, packages);
+            await PopulatePackageCache(cacheDirectory, packageUri, packages);
         }
 
-        private static async Task PopulatePackageCache(string token, string cacheDirectory, string packageUri, Dictionary<string, string> packages)
+        private static async Task PopulatePackageCache(string cacheDirectory, string packageUri, Dictionary<string, string> packages)
         {
             foreach (var package in packages)
             {
@@ -57,17 +57,16 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
                     // Ignore 404 or network exception and continue
                 }
 
-                if (package.Key.StartsWith(token))
+                Console.WriteLine($"Looking for package dependencies: {package.Key} {package.Value}...");
+                var record = await GetBuildRecordAsync(package.Key, package.Value);
+                var deps = record?.Dependencies;
+                if (!string.IsNullOrEmpty(deps))
                 {
-                    var record = await GetBuildRecordAsync(package.Key, package.Value);
-                    var deps = record?.Dependencies;
-                    if (!string.IsNullOrEmpty(deps))
-                    {
-                        var dependencyDict = new Dictionary<string, string>(
-                            deps.Split(',').Where(d => d.StartsWith(token)).Select(d => d.Split('|'))
-                                .Select(each => new KeyValuePair<string, string>(each.First(), each.Last())));
-                        await PopulatePackageCache(token, cacheDirectory, packageUri, dependencyDict);
-                    }
+                    Console.WriteLine($"Parsing dependencies: {deps}...");
+                    var dependencyDict = new Dictionary<string, string>(
+                        deps.Split(',').Select(d => d.Split('|'))
+                            .Select(each => new KeyValuePair<string, string>(each.First(), each.Last())));
+                    await PopulatePackageCache(cacheDirectory, packageUri, dependencyDict);
                 }
             }
         }

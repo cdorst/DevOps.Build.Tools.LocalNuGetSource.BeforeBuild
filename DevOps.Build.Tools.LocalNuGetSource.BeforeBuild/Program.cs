@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using static Common.Functions.DownloadFile.FileDownloader;
+using static DevOps.Build.AppVeyor.GetBuildRecord.BuildRecordGetter;
 using static System.IO.Path;
 
 namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var token = args.FirstOrDefault() ?? throw new ArgumentNullException("NamespacePrefix");
             var cacheDirectory = args[1] ?? throw new ArgumentNullException("CacheDirectory");
@@ -32,6 +34,11 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
             }
 
             // Save each package in local NuGet cache
+            await PopulatePackageCache($"{token}.", cacheDirectory, packageUri, packages);
+        }
+
+        private static async Task PopulatePackageCache(string token, string cacheDirectory, string packageUri, Dictionary<string, string> packages)
+        {
             foreach (var package in packages)
             {
                 var name = package.GetFileName();
@@ -48,6 +55,19 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
                 {
                     Console.WriteLine($"Error: {ex.Message}...");
                     // Ignore 404 or network exception and continue
+                }
+
+                if (package.Key.StartsWith(token))
+                {
+                    var record = await GetBuildRecordAsync(package.Key, package.Value);
+                    var deps = record?.Dependencies;
+                    if (!string.IsNullOrEmpty(deps))
+                    {
+                        var dependencyDict = new Dictionary<string, string>(
+                            deps.Split(',').Where(d => d.StartsWith(token)).Select(d => d.Split('|'))
+                                .Select(each => new KeyValuePair<string, string>(each.First(), each.Last())));
+                        await PopulatePackageCache(token, cacheDirectory, packageUri, dependencyDict);
+                    }
                 }
             }
         }

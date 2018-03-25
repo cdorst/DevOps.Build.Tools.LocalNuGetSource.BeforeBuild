@@ -17,8 +17,8 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
         private static readonly PolicyWrap _pollyWrapper = Policy.Wrap(new Policy[]
             {
                 Policy.Handle<HttpRequestException>()
-                    // Retry 3 times (exponential backoff for ~7 seconds)
-                    .WaitAndRetry(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(1.5, retryAttempt)))
+                    // Retry 4 times (exponential backoff for ~30 seconds)
+                    .WaitAndRetry(4, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
             });
 
         public static async Task Main(string[] args)

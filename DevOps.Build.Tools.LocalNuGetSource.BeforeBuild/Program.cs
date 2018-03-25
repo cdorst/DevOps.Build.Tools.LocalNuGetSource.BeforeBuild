@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Polly;
+using Polly.Wrap;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using static Common.Functions.DownloadFile.FileDownloader;
 using static DevOps.Build.AppVeyor.GetBuildRecord.BuildRecordGetter;
@@ -11,6 +14,13 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
 {
     public static class Program
     {
+        private static readonly PolicyWrap _pollyWrapper = Policy.Wrap(new Policy[]
+            {
+                Policy.Handle<HttpRequestException>()
+                    // Retry 3 times (exponential backoff for ~7 seconds)
+                    .WaitAndRetry(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(1.5, retryAttempt)))
+            });
+
         public static async Task Main(string[] args)
         {
             var token = args.FirstOrDefault() ?? throw new ArgumentNullException("NamespacePrefix");
@@ -46,16 +56,20 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
                 Console.WriteLine($"Looking for package: {name}...");
                 if (File.Exists(path)) continue;
 
-                try
+                Console.WriteLine($"Caching package: {name}...");
+                _pollyWrapper.Execute(() =>
                 {
-                    Console.WriteLine($"Caching package: {name}...");
-                    Download(new Uri($"{packageUri}/{name}"), path);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error: {ex.Message}...");
-                    // Ignore 404 or network exception and continue
-                }
+                    try
+                    {
+                        Download(new Uri($"{packageUri}/{name}"), path);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error: {ex.Message}...");
+                        if (!ex.Message.Contains("404")) throw ex; // and retry
+                        // else, swallow exception and continue on
+                    }
+                });
 
                 Console.WriteLine($"Looking for package dependencies: {package.Key} {package.Value}...");
                 var record = await GetBuildRecordAsync(package.Key, package.Value);

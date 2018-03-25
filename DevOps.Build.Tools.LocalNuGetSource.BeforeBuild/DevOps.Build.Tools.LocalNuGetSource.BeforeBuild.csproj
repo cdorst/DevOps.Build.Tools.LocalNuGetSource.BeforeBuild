@@ -8,10 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDorst.Azure.Storage.Connection.GetConnectionString" Version="3.0.0" />
-    <PackageReference Include="CDorst.Azure.Storage.Table.GetTableReference" Version="3.0.0" />
+    <PackageReference Include="CDorst.Azure.Storage.Connection.GetConnectionString" Version="4.0.1" />
+    <PackageReference Include="CDorst.Azure.Storage.Table.GetTableReference" Version="4.0.1" />
     <PackageReference Include="CDorst.Common.Functions.DownloadFile" Version="2.0.0" />
-    <PackageReference Include="CDorst.DevOps.Build.AppVeyor.GetBuildRecord" Version="1.0.0" />
+    <PackageReference Include="CDorst.DevOps.Build.AppVeyor.GetBuildRecord" Version="1.0.2" />
+    <PackageReference Include="Polly" Version="5.8.0" />
   </ItemGroup>
 
 </Project>

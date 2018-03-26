@@ -1,5 +1,4 @@
 ﻿using Polly;
-using Polly.Wrap;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,12 +13,10 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
 {
     public static class Program
     {
-        private static readonly PolicyWrap _pollyWrapper = Policy.Wrap(new Policy[]
-            {
-                Policy.Handle<HttpRequestException>()
-                    // Retry 4 times (exponential backoff for ~30 seconds)
-                    .WaitAndRetry(4, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
-            });
+        // Retry 4 times (exponential backoff for ~30 seconds)
+        private static readonly Policy _polly = Policy
+            .Handle<HttpRequestException>()
+            .WaitAndRetry(4, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
 
         public static async Task Main(string[] args)
         {
@@ -57,7 +54,7 @@ namespace DevOps.Build.Tools.LocalNuGetSource.BeforeBuild
                 if (File.Exists(path)) continue;
 
                 Console.WriteLine($"Caching package: {name}...");
-                _pollyWrapper.Execute(() =>
+                _polly.Execute(() =>
                 {
                     try
                     {
